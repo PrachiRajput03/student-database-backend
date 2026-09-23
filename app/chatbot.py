@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 from app.database import SessionLocal
 from app import crud, models
 
+from app.vector_store import retrieve_student_context
+
 load_dotenv()
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
@@ -135,6 +137,32 @@ def ask_gemini(question: str) -> str:
     search_students
 ]
 }
+    )
+
+    return response.text
+
+def ask_gemini_with_context(question: str) -> str:
+    context = retrieve_student_context(question)
+
+    prompt = f"""
+You are a student database assistant.
+
+Answer the user's question using the student information provided below.
+
+Student information:
+{context}
+
+User question:
+{question}
+
+If the provided student information does not contain enough information
+to answer the question, clearly say that the information is not available.
+Do not invent student information.
+"""
+
+    response = client.models.generate_content(
+        model="gemini-3.6-flash",
+        contents=prompt
     )
 
     return response.text
