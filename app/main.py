@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app import models, schemas, crud
 from app.database import engine, get_db
-from app.chatbot import ask_gemini
+from app.graph import graph
 
 
 # Create database tables
@@ -101,8 +101,13 @@ def delete_student(
 # CHATBOT
 @app.post("/chat", response_model=schemas.ChatResponse)
 def chat(request: schemas.ChatRequest):
-    answer = ask_gemini(request.question)
+    result = graph.invoke({
+        "question": request.question,
+        "route": "",
+        "context": "",
+        "answer": ""
+    })
 
     return {
-        "answer": answer
+        "answer": result["answer"]
     }

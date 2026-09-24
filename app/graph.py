@@ -32,48 +32,29 @@ def retrieve_database_context(state: ChatState):
 
 
 def route_question(state: ChatState):
-    prompt = f"""
-You are routing questions for a student database assistant.
+    question = state["question"].lower()
 
-Choose exactly ONE of these routes:
+    database_keywords = [
+        "how many",
+        "count",
+        "number of",
+        "student id",
+        "id of",
+        "which students",
+        "students studying",
+        "students in",
+        "course",
+        "email",
+        "exact",
+        "list all",
+        "all students"
+    ]
 
-DATABASE
-Use DATABASE when the question asks for exact structured information,
-such as:
-- how many students are there
-- student with a specific ID
-- students in a particular course
-- exact student records
-
-VECTOR
-Use VECTOR when the question is better answered through semantic
-retrieval from student information, such as:
-- describe a student
-- tell me about a student
-- find a student based on a natural-language description
-- questions involving descriptive characteristics
-
-Return ONLY one word:
-DATABASE
-or
-VECTOR
-
-Question:
-{state["question"]}
-"""
-
-    response = client.models.generate_content(
-        model="gemini-3.6-flash",
-        contents=prompt
-    )
-
-    route = response.text.strip().upper()
-
-    if "DATABASE" in route:
-        return {"route": "database"}
+    for keyword in database_keywords:
+        if keyword in question:
+            return {"route": "database"}
 
     return {"route": "vector"}
-
 
 def choose_retrieval_path(state: ChatState):
     if state["route"] == "database":
@@ -150,11 +131,21 @@ graph = graph_builder.compile()
 
 
 if __name__ == "__main__":
-    test_state = {
-        "question": "Tell me about the female student",
-        "route": "",
-        "context": "",
-        "answer": ""
-    }
+    tests = [
+        "How many students are currently in the database?",
+        "Which students are studying MCA?",
+        "Tell me about the female student",
+        "What do you know about the student who is 22 years old?"
+    ]
 
-    print(route_question(test_state))
+    for question in tests:
+        state = {
+            "question": question,
+            "route": "",
+            "context": "",
+            "answer": ""
+        }
+
+        print(question)
+        print(route_question(state))
+        print()
